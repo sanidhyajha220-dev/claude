@@ -1,0 +1,40 @@
+{
+  "name": "mistral-chat-clone",
+  "version": "1.0.0",
+  "description": "A Mistral-powered desktop chat app",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "electron .",
+    "dist": "electron-builder --win nsis",
+    "dist:win": "electron-builder --win nsis",
+    "dist:mac": "electron-builder --mac dmg zip --x64 --arm64"
+  },
+  "devDependencies": {
+    "electron": "45.4.1",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.sanidhya.mistralchat",
+    "productName": "Mistral Chat",
+    "asar": true,
+    "directories": { "output": "release" },
+    "files": [
+      "index.html",
+      "server.mjs",
+      "firebase-config.js",
+      "website/manifest.webmanifest",
+      "website/service-worker.js",
+      "website/mobile-icon.svg",
+      "electron/**/*",
+      "package.json",
+      "!**/.env",
+      "!**/generated/**"
+    ],
+    "win": { "target": ["nsis"] },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true },
+    "mac": { "target": ["dmg", "zip"], "category": "public.app-category.productivity" }
+  }
+}

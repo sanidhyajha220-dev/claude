@@ -1,0 +1,15 @@
+{
+  "id": "/app",
+  "name": "Mistral Chat",
+  "short_name": "Mistral Chat",
+  "description": "A calm space to chat, write code, and create images.",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f8f7f4",
+  "theme_color": "#f8f7f4",
+  "icons": [
+    { "src": "/mobile-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

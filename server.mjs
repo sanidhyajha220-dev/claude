@@ -64,13 +64,21 @@ export const server = http.createServer(async (req, res) => {
     return;
   }
   if (req.method === 'GET' && req.url === '/download/windows') {
-    const installer = path.join(root, 'release', 'Mistral Chat Setup 1.0.0.exe');
+    const installers = [
+      path.join(root, 'release', 'Mistral-Chat-Setup.exe'),
+      path.join(root, 'release', 'Mistral Chat Setup 1.0.0.exe')
+    ];
     try {
+      let installer;
+      for (const candidate of installers) {
+        try { await stat(candidate); installer = candidate; break; } catch {}
+      }
+      if (!installer) throw new Error('Installer missing');
       const { size } = await stat(installer);
       res.writeHead(200, {
         'Content-Type': 'application/octet-stream',
         'Content-Length': size,
-        'Content-Disposition': 'attachment; filename="Mistral-Chat-Setup-1.0.0.exe"',
+        'Content-Disposition': 'attachment; filename="Mistral-Chat-Setup.exe"',
         'X-Content-Type-Options': 'nosniff'
       });
       createReadStream(installer).pipe(res);
@@ -180,15 +188,31 @@ export const server = http.createServer(async (req, res) => {
 });
 
 export const serverReady = new Promise((resolve, reject) => {
-  server.once('listening', () => { activePort = server.address().port; resolve(activePort); });
-  server.once('error', error => { if (error.code === 'EADDRINUSE') resolve(port); else reject(error); });
+  const maxPort = Math.min(port + 25, 65535);
+  const listenOn = candidate => {
+    const onListening = () => {
+      server.off('error', onError);
+      activePort = server.address().port;
+      console.log(`Chat app running at http://localhost:${activePort}`);
+      resolve(activePort);
+    };
+    const onError = error => {
+      server.off('listening', onListening);
+      if (error.code === 'EADDRINUSE' && candidate < maxPort) {
+        console.warn(`Port ${candidate} is already in use; trying ${candidate + 1}.`);
+        listenOn(candidate + 1);
+        return;
+      }
+      reject(error);
+    };
+    server.once('listening', onListening);
+    server.once('error', onError);
+    server.listen(candidate, '127.0.0.1');
+  };
+
+  listenOn(port);
 });
-server.on('error', error => {
-  if (error.code === 'EADDRINUSE') {
-    console.log(`A chat server is already using port ${port}. Open the existing app at http://localhost:${port}`);
-    return;
-  }
+serverReady.catch(error => {
   console.error('Could not start the chat server:', error.message);
   process.exitCode = 1;
 });
-server.listen(port, '127.0.0.1', () => console.log(`Chat app running at http://localhost:${activePort}`));
